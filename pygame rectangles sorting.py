@@ -2,6 +2,19 @@ import pygame
 import sys
 import time
 import random
+import math
+
+
+x_speed = 5
+
+# Global variable tracking application state
+running = True 
+def is_convertible_to_int(val):
+    try:
+        int(val)
+        return True
+    except (ValueError, TypeError):
+        return False
 
 sys.setrecursionlimit(10000000)
 
@@ -19,6 +32,9 @@ def swap(list_s, ind1,ind2):
     return(list_s)
 
 def quicksort(list_s,start,end):
+    if not running:
+        return []
+    
     pivot = list_s[end]
     if start > end:
         return[]
@@ -35,17 +51,32 @@ def quicksort(list_s,start,end):
     return quicksort(list_s, start, i - 1) + [list_s[i]] + quicksort(list_s, i + 1, end)
 
 def update_screen(list_s):
+    global running
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
     rectangles = []
     screen.fill(BG_COLOUR)
-    j = 0
-    for i in list_s:
-        j+=1
-        rectangles.append((j,SCREEN_HEIGHT-i,1,i))
+
+    height_mult = SCREEN_HEIGHT/len(list_s) 
+    print(height_mult)
+    print(SCREEN_HEIGHT)
+    print(len(list_s) )
+    for index, i in enumerate(list_s):
+        x1 = math.floor(index * SCREEN_WIDTH / len(list_s))
+        x2 = math.floor((index + 1) * SCREEN_WIDTH / len(list_s))
+
+        width = x2 - x1
+
+        rectangles.append(
+            (x1, SCREEN_HEIGHT - math.floor(i*height_mult), width, math.floor(i*height_mult))
+        )
 
     for i in rectangles:
         pygame.draw.rect(screen, (255,255,255), i)
 
-    clock.tick(60)
+    pygame.display.flip()
+    clock.tick(75 * x_speed)
         
         
     
@@ -54,48 +85,51 @@ def update_screen(list_s):
 
 def main():
     pygame.init()
+    global SCREEN_WIDTH,SCREEN_HEIGHT,BG_COLOUR
 
-    SCREEN_WIDTH= 1920
-    SCREEN_HEIGHT= 1080
+    monitor_info = pygame.display.Info()
+    monitor_width = monitor_info.current_w
+    monitor_height = monitor_info.current_h
+
+    SCREEN_WIDTH= monitor_width
+    SCREEN_HEIGHT= monitor_height
+    global screen
+
+    user = input("input pixel val or SW (SCREEN WIDTH)")
+    
+    if is_convertible_to_int(user):
+        AMOUNT = int(user)
+    
+    else:
+        AMOUNT = int(SCREEN_HEIGHT)
+
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-
+    global clock
     clock = pygame.time.Clock()
 
     BG_COLOUR = (0,0,0)
 
     running = True
 
+    
+
     while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
-        # --- Game Logic Updates ---
-        # (Move players, check collisions, etc. would go here)
-
-
         
 
-        # --- Drawing / Rendering ---
-        screen.fill(BG_COLOUR)  # Clear the screen with a solid background
+
+
+        init(AMOUNT)
+        quicksort(init_list,0,AMOUNT-1)
         
-        # (Draw your sprites, shapes, and text here)
 
-        height = 100
-        rect = (0,SCREEN_HEIGHT-height,100,height)
-
-        pygame.draw.rect(screen, (255,255,255), rect)
+    
 
 
 
 
+        running = False
 
-        # --- Update the Display ---
-        pygame.display.flip()  # Swap buffers to reveal the new frame
-        
-        # --- Maintain Frame Rate ---
-          # Cap the game loop at 60 Frames Per Second
 
     # 5. Clean up and Exit safely
     pygame.quit()
